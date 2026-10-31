@@ -1,0 +1,4 @@
+# Deploy pelo Git: publica somente a versao web, sem etapa de build.
+# Os cabecalhos ficam em web/_headers.
+[build]
+  publish = "web"

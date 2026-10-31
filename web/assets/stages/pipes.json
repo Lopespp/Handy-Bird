@@ -1,0 +1,17 @@
+{
+  "valley": {
+    "topLip": 73,
+    "ringTop": 37,
+    "bottomLip": 4
+  },
+  "beach": {
+    "topLip": 72,
+    "ringTop": 36,
+    "bottomLip": 18
+  },
+  "storm": {
+    "topLip": 75,
+    "ringTop": 48,
+    "bottomLip": 15
+  }
+}

@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#ffc23d">
+    <title>Handy Bird</title>
+    <meta name="description" content="Handy Bird: fly with your hand through the webcam. Raise your hand to climb, make a fist to shoot and beat three bosses across three maps. Hand tracking runs right in your browser.">
+    <link rel="canonical" href="https://handy-bird.netlify.app/">
+    <meta property="og:type" content="website">
+    <meta property="og:locale" content="en_US">
+    <meta property="og:locale:alternate" content="pt_BR">
+    <meta property="og:site_name" content="Handy Bird">
+    <meta property="og:title" content="Handy Bird: fly with your hand through the webcam">
+    <meta property="og:description" content="Raise your hand, the bird climbs. Make a fist to shoot. Real-time hand tracking in the browser, with no video sent to any server.">
+    <meta property="og:url" content="https://handy-bird.netlify.app/">
+    <meta property="og:image" content="https://handy-bird.netlify.app/assets/brand/preview.jpg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="Handy, the gloved bird, flying between pipes in the Green Valley">
+    <meta name="twitter:card" content="summary_large_image">
+    <link rel="icon" type="image/png" href="./assets/brand/icon.png">
+    <link rel="apple-touch-icon" href="./assets/brand/apple-touch-icon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@500;700;800&family=Pixelify+Sans:wght@700&display=swap">
+    <link rel="stylesheet" href="./style.css">
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.90.0/dist/phaser.min.js" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/lucide@0.468.0/dist/umd/lucide.min.js" crossorigin="anonymous"></script>
+    <script type="module" src="./js/app.js"></script>
+  </head>
+  <body>
+    <main id="app" data-stage="valley">
+      <header class="topbar">
+        <a class="brand" href="#" aria-label="Handy Bird, home" data-i18n-label="brand.home">
+          <img src="./assets/characters/handy.png" width="56" height="42" alt="">
+          <span class="brand-text"><span class="wordmark">Handy Bird</span><span class="tagline" data-i18n="brand.tagline">Fly with your hand through the webcam</span></span>
+        </a>
+        <fieldset class="mode-switch" aria-label="Controls" data-i18n-label="mode.label">
+          <label><input type="radio" name="mode" value="camera" checked><span><i data-lucide="hand"></i>Webcam</span></label>
+          <label><input type="radio" name="mode" value="demo"><span><i data-lucide="mouse-pointer-2"></i>Mouse</span></label>
+        </fieldset>
+        <div class="toolbar">
+          <button id="language" class="icon-button language-button" title="Mudar para português" aria-label="Mudar para português" data-i18n-title="lang.switch" data-i18n-label="lang.switch"><span data-i18n="lang.code">PT</span></button>
+          <button id="sound" class="icon-button" title="Sound (M)" aria-label="Turn sound off" aria-pressed="true" data-i18n-title="sound.title"><i data-lucide="volume-2"></i></button>
+          <button id="pause" class="icon-button" title="Pause (P)" aria-label="Pause"><i data-lucide="pause"></i></button>
+          <button id="restart" class="icon-button" title="Restart (R)" aria-label="Restart" data-i18n-title="action.restartTitle" data-i18n-label="action.restart"><i data-lucide="rotate-ccw"></i></button>
+          <button id="fullscreen" class="icon-button" title="Fullscreen" aria-label="Fullscreen" data-i18n-title="action.fullscreen" data-i18n-label="action.fullscreen"><i data-lucide="maximize"></i></button>
+          <a class="icon-button help-link" href="#how-to-play" title="How to play" aria-label="How to play" data-i18n-title="action.help" data-i18n-label="action.help"><i data-lucide="circle-help"></i></a>
+        </div>
+      </header>
+
+      <div class="workspace">
+        <section class="playfield card" aria-label="Game" data-i18n-label="game.label">
+          <fieldset class="character-picker" aria-label="Character" data-i18n-label="picker.label">
+            <legend data-i18n="picker.legend">Flyer</legend>
+            <label><input type="radio" name="character" value="handy" checked><span><img src="./assets/characters/handy.png" width="32" height="32" alt="">Handy</span></label>
+            <label><input type="radio" name="character" value="pombo"><span><img src="./assets/characters/mmm_pompo.png" width="32" height="32" alt="">PoMMMbo</span></label>
+            <label><input type="radio" name="character" value="claraia"><span><img src="./assets/characters/claraia.png" width="32" height="32" alt="">Claraia</span></label>
+            <label><input type="radio" name="character" value="gavian"><span><img src="./assets/characters/gavian.png" width="32" height="32" alt="">Gavian</span></label>
+          </fieldset>
+          <div class="stage">
+            <div id="game" aria-label="Flight area" data-i18n-label="game.area"></div>
+            <div id="overlay" class="overlay">
+              <div class="overlay-card">
+                <img id="overlay-hero" src="./assets/characters/handy.png" width="96" height="72" alt="">
+                <h2 id="overlay-title">Ready to fly</h2>
+                <p id="overlay-score" hidden></p>
+                <ol id="overlay-steps" class="steps">
+                  <li><i data-lucide="video"></i><span data-i18n="steps.camera">Turn on the webcam</span></li>
+                  <li><i data-lucide="hand"></i><span data-i18n="steps.move">Open hand: move up and down</span></li>
+                  <li><i data-lucide="grab"></i><span data-i18n="steps.fist">Make a fist: laser</span></li>
+                  <li><span class="peace" aria-hidden="true">✌️</span><span data-i18n="steps.peace">Two fingers up: pause</span></li>
+                </ol>
+                <progress id="ready-progress" max="1" value="0" hidden aria-label="Get ready" data-i18n-label="overlay.preparing"></progress>
+                <button id="start" class="primary big"><i data-lucide="video"></i><span>Turn on webcam</span></button>
+                <p id="overlay-hint" class="hint" hidden><i data-lucide="grab"></i><span data-i18n="start.hint">or make a fist</span></p>
+              </div>
+            </div>
+          </div>
+          <div class="field-footer"><span id="stage-label">01 / GREEN VALLEY</span><button id="shoot" title="Fire laser" aria-label="Fire laser" data-i18n-title="action.shoot" data-i18n-label="action.shoot"><i data-lucide="zap"></i><span>Laser</span></button></div>
+        </section>
+
+        <aside class="sidebar card" aria-label="Controls and tracking" data-i18n-label="sidebar.label">
+          <div class="section-heading"><h2 data-i18n="camera.heading">Camera</h2><span id="live-badge" class="pill">MOUSE</span></div>
+          <div class="preview" id="preview">
+            <video id="camera-video" autoplay muted playsinline aria-label="Webcam preview" data-i18n-label="camera.video" hidden></video>
+            <canvas id="landmarks" width="640" height="480" aria-hidden="true"></canvas>
+            <img id="preview-hero" src="./assets/characters/handy.png" alt="Handy">
+            <span id="camera-placeholder" data-i18n="camera.off">Camera off</span>
+          </div>
+          <p id="camera-status" role="status">Camera off</p>
+          <button id="camera-toggle" class="camera-button primary"><i data-lucide="video"></i><span>Turn on webcam</span></button>
+          <button id="calibrate" class="camera-button" hidden title="Measures how far your hand goes up and down" data-i18n-title="camera.calibrateTitle"><i data-lucide="move-vertical"></i><span data-i18n="camera.calibrate">Calibrate height</span></button>
+          <div class="stats">
+            <div class="readout wide"><span data-i18n="stat.height">Height</span><strong id="height-value">--</strong><meter id="height-meter" min="0" max="100" value="0" aria-label="Flyer height" data-i18n-label="stat.heightMeter"></meter></div>
+            <div class="readout"><span data-i18n="stat.speed">Speed</span><strong id="speed-value">205 px/s</strong></div>
+            <div class="readout"><span data-i18n="stat.laser">Laser</span><strong id="laser-value">READY</strong></div>
+            <div class="readout"><span data-i18n="stat.tracking">Tracking</span><strong id="tracking-value">No hand</strong></div>
+            <div class="readout"><span data-i18n="stat.inference">Inference</span><strong id="inference-value" title="Frames analyzed per second, latency from capture to result and the processor in use" data-i18n-title="stat.inferenceTitle">--</strong></div>
+          </div>
+          <div class="side-actions"><button id="side-pause"><i data-lucide="pause"></i><span>Pause</span></button><button id="side-restart" class="primary"><i data-lucide="rotate-ccw"></i><span data-i18n="action.restart">Restart</span></button></div>
+          <p class="local-label">Made by lopespp</p>
+        </aside>
+      </div>
+      <p id="fatal-error" role="alert" hidden></p>
+
+      <section id="how-to-play" class="how card" aria-labelledby="how-title">
+        <h2 id="how-title" data-i18n="how.title">How to play</h2>
+        <div class="how-grid">
+          <article><span class="how-icon sun"><i data-lucide="hand"></i></span><h3 data-i18n="how.openTitle">Open hand, free flight</h3><p data-i18n="how.openText">Hand up, bird up; hand down, bird down. No gravity and no jumping: Handy follows your palm.</p></article>
+          <article><span class="how-icon coral"><i data-lucide="grab"></i></span><h3 data-i18n="how.fistTitle">Make a fist</h3><p data-i18n="how.fistText">Fires a laser at the bird's height. It breaks the blockers that close some pipe gaps and takes down the enemies that cross the screen before the boss.</p></article>
+          <article><span class="how-icon sky"><i data-lucide="shield"></i></span><h3 data-i18n="how.livesTitle">Lives and power-ups</h3><p data-i18n="how.livesText">You have 3 lives. Power-ups show up in random spots, sometimes inside a pipe gap: a 10-second shield, slow motion and a triple laser.</p></article>
+          <article><span class="how-icon ink"><i data-lucide="swords"></i></span><h3 data-i18n="how.bossesTitle">Three bosses</h3><p data-i18n="how.bossesText">Each map ends with a boss. Dodge its attacks and hit it with your laser until its health runs out. Beat all three to win.</p></article>
+        </div>
+        <ul class="tips">
+          <li><span class="peace" aria-hidden="true">✌️</span><span data-i18n-html="tip.peace"><strong>Pause with your hand:</strong> raise your index and middle fingers and fold the other three. Make a fist to keep going.</span></li>
+          <li><i data-lucide="sun"></i><span data-i18n="tip.light">Good light in front of you and your whole palm in view.</span></li>
+          <li><i data-lucide="move-vertical"></i><span data-i18n-html="tip.calibrate">Use <strong>Calibrate height</strong> to match how far your hand can reach.</span></li>
+          <li><i data-lucide="lock"></i><span data-i18n="tip.privacy">Your video never leaves your computer: the hand is recognized right in the browser.</span></li>
+        </ul>
+      </section>
+      <footer class="site-footer" data-i18n="footer.made">Handy Bird · Made with Phaser and MediaPipe</footer>
+    </main>
+    <noscript>Enable JavaScript to play. / Ative o JavaScript para jogar.</noscript>
+  </body>
+</html>

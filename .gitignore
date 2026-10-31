@@ -1,0 +1,35 @@
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Modelos do MediaPipe e capturas de teste
+*.task
+.artifacts/
+
+# Ilustrações originais (os sprites prontos ficam em web/assets)
+art/source/
+
+# Anotações pessoais
+NOTAS-DA-SESSAO.md
+
+# Editores
+.vscode/
+.idea/
+
+# Segredos
+.env
+.env.*
+!.env.example
+
+# Sistema
+*.log
+.DS_Store
+Thumbs.db
+Desktop.ini

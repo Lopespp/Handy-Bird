@@ -1,0 +1,5 @@
+# Testes da página em navegador headless
+playwright>=1.48,<2
+# Scripts de tools/ que geram os sprites
+numpy>=2,<3
+opencv-python-headless>=4.11,<5
