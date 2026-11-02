@@ -58,7 +58,7 @@ export class Sound {
   observe(game) {
     const current = {
       score: game.score, cooldown: game.shotCooldown, state: game.state,
-      destroyed: game.pipes.filter((pipe) => pipe.destroyed).length,
+      broken: game.broken,
       bossHealth: game.boss?.health ?? null,
       lives: game.lives, invulnerable: game.invulnerable, collected: game.collected, defeated: game.defeated,
     };
@@ -66,7 +66,7 @@ export class Sound {
     this.snapshot = current;
     if (!previous || current.score < previous.score || (["over", "won"].includes(previous.state) && current.state !== previous.state)) return;
     if (current.cooldown > previous.cooldown) this.laser();
-    if (current.destroyed > previous.destroyed) this.shatter();
+    if (current.broken > previous.broken) this.shatter();
     if (current.score > previous.score) this.point();
     if (previous.bossHealth === null && current.bossHealth !== null) this.alarm();
     else if (previous.bossHealth !== null && current.bossHealth === null) this.victory();

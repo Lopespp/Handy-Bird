@@ -67,7 +67,7 @@ freezes until it comes back, with no penalty.
 | Close your hand | Shoot (open and close again for the next shot) |
 | Peace sign ✌ | Pause; closing your hand resumes |
 | `Space` or click (Mouse mode) | Shoot |
-| `P` · `R` · `M` | Pause · restart · sound |
+| `P` · `R` · `M` · `F` | Pause · restart · sound · fullscreen |
 
 Without a webcam, **Mouse mode** lets you try the game with the cursor. Since
 clicking is much easier than closing your hand, this mode is 25% faster and the

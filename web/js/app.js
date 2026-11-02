@@ -36,6 +36,18 @@ function showCameraToggle() {
   buttonIcon(ui["camera-toggle"], on ? "video-off" : "video", t(on ? "camera.turnOff" : "start.camera"));
 }
 function showLanguage() { ui.language.dataset.current = language(); }
+function showFullscreen() {
+  const label = t(document.fullscreenElement ? "action.exitFullscreen" : "action.fullscreen");
+  ui.fullscreen.setAttribute("aria-label", label);
+  ui.fullscreen.title = `${label} (F)`;
+  buttonIcon(ui.fullscreen, document.fullscreenElement ? "minimize" : "maximize");
+}
+// Tela cheia da pagina toda: o CSS esconde o "Como jogar" e aumenta o jogo para
+// caber na altura da tela, mantendo o painel da camera ao lado.
+async function toggleFullscreen() {
+  try { if (document.fullscreenElement) await document.exitFullscreen(); else await document.documentElement.requestFullscreen(); }
+  catch { showFailure(t("error.fullscreen")); }
+}
 
 function selectCharacter(character) {
   if (!Object.hasOwn(characters, character)) return;
@@ -240,7 +252,8 @@ function updateUi(time, input) {
   ui["laser-value"].classList.toggle("cooling", game.shotCooldown > 0);
   const stage = game.currentStage;
   setText(ui["stage-label"], t(`stage.${stage.key}`));
-  document.getElementById("app").dataset.stage = stage.key;
+  const app = document.getElementById("app");
+  if (app.dataset.stage !== stage.key) app.dataset.stage = stage.key;
   ui.overlay.classList.toggle("victory", game.state === "won");
   setText(ui["inference-value"], state.mode === "camera" ? inferenceText() : "--");
   ui.calibrate.disabled = !!state.calibration;
@@ -288,17 +301,15 @@ ui.sound.addEventListener("click", toggleSound);
 ui.language.addEventListener("click", () => setLanguage(language() === "en" ? "pt" : "en"));
 // Textos que o JavaScript escreve (e nao so o HTML marcado) tambem mudam de idioma.
 onLanguageChange(() => {
-  showSound(); showCameraToggle(); setBadge(badge); showStatus(); showLanguage();
+  showSound(); showCameraToggle(); setBadge(badge); showStatus(); showLanguage(); showFullscreen();
   lastUi = 0;
   state.scene?.translate();
 });
 for (const type of ["pointerdown", "keydown"]) window.addEventListener(type, () => sound.unlock(), { capture: true });
 for (const id of ["restart", "side-restart"]) ui[id].addEventListener("click", restart);
 for (const id of ["pause", "side-pause"]) ui[id].addEventListener("click", togglePause);
-ui.fullscreen.addEventListener("click", async () => {
-  try { if (document.fullscreenElement) await document.exitFullscreen(); else await document.documentElement.requestFullscreen(); }
-  catch { showFailure(t("error.fullscreen")); }
-});
+ui.fullscreen.addEventListener("click", toggleFullscreen);
+document.addEventListener("fullscreenchange", showFullscreen);
 ui.shoot.addEventListener("pointerdown", (event) => { event.preventDefault(); state.pointerFist = true; ui.shoot.setPointerCapture(event.pointerId); });
 window.addEventListener("pointerup", () => { state.pointerFist = false; });
 window.addEventListener("pointercancel", () => { state.pointerFist = false; });
@@ -309,13 +320,14 @@ window.addEventListener("keydown", (event) => {
   if (event.code === "KeyP") togglePause();
   if (event.code === "KeyR") restart();
   if (event.code === "KeyM") toggleSound();
+  if (event.code === "KeyF") toggleFullscreen();
 });
 window.addEventListener("keyup", (event) => { if (event.code === "Space") state.spaceFist = false; });
 window.addEventListener("blur", () => { state.spaceFist = false; state.pointerFist = false; if (state.active && !state.game.finished) state.game.paused = true; });
 document.addEventListener("visibilitychange", () => { if (document.hidden) { state.spaceFist = false; state.pointerFist = false; if (state.active && !state.game.finished) state.game.paused = true; } });
 window.addEventListener("pagehide", stopCamera);
 compact.addEventListener("change", placePreview);
-window.addEventListener("load", () => { showSound(); icons(); });
+window.addEventListener("load", () => { showSound(); showFullscreen(); icons(); });
 
 translatePage();
 showLanguage();

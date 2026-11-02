@@ -238,6 +238,9 @@ export function runTests() {
   played.length = 0; heard.boss.health -= 1; audio.observe(heard);
   heard.boss = null; heard.state = "over"; audio.observe(heard);
   check(played.join() === "hit,victory,crash", "sound follows boss hit, defeat and crash");
+  played.length = 0; heard.pipes = [{ x: 400, gapY: 330, gap: 180, red: true, destroyed: false }]; heard.lasers = [{ x: 380, y: 330 }];
+  heard.updateLasers(0.02); heard.pipes = []; audio.observe(heard);
+  check(heard.broken === 1 && played.join() === "shatter", "breaking a blocker plays its sound even after the pipe leaves");
   played.length = 0; heard.restart(); audio.observe(heard);
   check(played.length === 0, "restart is silent");
   heard.state = "playing"; heard.lives = 3; heard.shield = true; audio.observe(heard);
@@ -294,6 +297,8 @@ export function runTests() {
   check(tripleT.displayHeight === config.bossHeight && Math.abs(tripleT.displayWidth - config.bossWidth) < 30 && tripleT.texture.getSourceImage().width === 234, "new Triple T sprite keeps its proportions");
   const hudGame = playing(); hudGame.shield = true; scene.drawHud(hudGame);
   check(scene.powerText.text === `${t("power.shield")} 10s`, "HUD counts down the shield");
+  const fullscreenButton = document.getElementById("fullscreen");
+  check(fullscreenButton.title === `${t("action.fullscreen")} (F)` && fullscreenButton.getAttribute("aria-label") === t("action.fullscreen"), "fullscreen button names its shortcut");
   // Ingles e portugues: a pagina, o placar do jogo e o botao de idioma trocam juntos.
   const originalLanguage = language();
   try {

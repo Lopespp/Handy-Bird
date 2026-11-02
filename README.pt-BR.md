@@ -68,7 +68,7 @@ jogo congela até ela voltar, sem perder nada.
 | Fechar a mão | Atirar (abra e feche de novo para o próximo tiro) |
 | Sinal de paz ✌ | Pausar; fechar a mão retoma |
 | `Espaço` ou clique (modo Mouse) | Atirar |
-| `P` · `R` · `M` | Pausar · novo voo · som |
+| `P` · `R` · `M` · `F` | Pausar · novo voo · som · tela cheia |
 
 Sem webcam, o **modo Mouse** permite testar o jogo com o cursor. Como clicar é bem
 mais fácil do que fechar a mão, esse modo é 25% mais rápido e o laser recarrega em 1 s.

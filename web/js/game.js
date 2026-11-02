@@ -230,6 +230,7 @@ export class Game {
     this.enemies = [];
     this.enemyTimer = config.firstEnemyDelay;
     this.defeated = 0;
+    this.broken = 0;
     this.pipesCreated = 0;
     this.nextPowerAt = Infinity;
     this.nextRedAt = this.redInterval();
@@ -422,7 +423,7 @@ export class Game {
         this.impacts.push({ x: bossRectangle(this.boss).left, y: laser.y, remaining: 0.24 });
         if (this.boss.health <= 0) this.defeatBoss();
       } else if (hit) {
-        if (hitBarrier) hit.destroyed = true;
+        if (hitBarrier) { hit.destroyed = true; this.broken += 1; }
         this.impacts.push({ x: Math.max(previousX, hit.x), y: laser.y, remaining: 0.24 });
       } else if (laser.x < config.width) active.push(laser);
     }
