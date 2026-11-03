@@ -1,7 +1,7 @@
 import { Calibration, Game, HandLock, OneEuroFilter, config, barrierRectangle, bossRectangle, isFistClosed, isPeaceSign, stages } from "./game.js";
 import { HandCamera } from "./camera.js";
 import { pauseWithPeace, startWithFist, state } from "./app.js";
-import { characters, enemyKinds } from "./scene.js";
+import { characters, minionKinds } from "./scene.js";
 import { language, setLanguage, t } from "./i18n.js";
 import { Sound } from "./sound.js";
 
@@ -26,7 +26,7 @@ export function runTests() {
   check(progress.speed === 295 && progress.spacing === 340 && progress.newPipe(820).gap === 185, "steady progressive difficulty");
   progress.score = 10000;
   check(progress.speed === 370 && progress.spacing === 300 && progress.newPipe(820).gap === 150, "soft difficulty caps");
-  progress.score = 40; progress.boss = { kind: "tralalero" }; progress.nextRedAt = 0;
+  progress.score = 40; progress.boss = { kind: "sharking" }; progress.nextRedAt = 0;
   const bossPipe = progress.newPipe(820);
   check(progress.spacing === Math.round(348 * config.bossSpacingFactor) && bossPipe.gap === 189 + config.bossGapBonus && !bossPipe.red, "boss fights get wider pipes without blockers");
   progress.boss = null;
@@ -45,7 +45,7 @@ export function runTests() {
   check(firing.lasers.length === 2, "opening rearms laser");
   const boss = playing(); boss.pipes = [];
   let threshold = 30;
-  for (const [index, [kind, health]] of [["tripleT", config.bossHealth], ["tralalero", config.tralalero.health], ["bombardino", config.bombardino.health]].entries()) {
+  for (const [index, [kind, health]] of [["valleyWarden", config.valleyWarden.health], ["sharking", config.sharking.health], ["ironbeak", config.ironbeak.health]].entries()) {
     boss.score = threshold - 1; boss.spawnBoss();
     check(boss.boss === null, `no ${kind} before ${threshold}`);
     boss.score = threshold; boss.spawnBoss();
@@ -66,35 +66,37 @@ export function runTests() {
   boss.togglePause();
   check(!boss.paused, "victory cannot be paused");
   const attack = playing(); attack.score = 30; attack.spawnBoss();
-  attack.updateBoss(config.throwInterval - 0.1);
-  check(attack.projectiles.length === 0, "initial bat cooldown");
+  const warden = config.valleyWarden;
+  attack.updateBoss(warden.throwInterval - 0.1);
+  check(attack.projectiles.length === 0, "initial club cooldown");
   attack.updateBoss(0.11);
-  check(attack.projectiles.length === 1 && attack.projectiles[0].kind === "bat" && Math.abs(Math.hypot(attack.projectiles[0].velocityX, attack.projectiles[0].velocityY) - config.batSpeed) < 0.001, "slow wooden bat speed");
-  const tunnel = playing(); tunnel.launch("bat", 400, tunnel.birdY, -10000, 0, config.batRadius); tunnel.updateProjectiles(0.05);
-  check(tunnel.state === "over", "swept bat collision");
+  check(attack.projectiles.length === 1 && attack.projectiles[0].kind === "club" && Math.abs(Math.hypot(attack.projectiles[0].velocityX, attack.projectiles[0].velocityY) - warden.clubSpeed) < 0.001, "valley warden throws a slow wooden club");
+  const tunnel = playing(); tunnel.launch("club", 400, tunnel.birdY, -10000, 0, warden.clubRadius); tunnel.updateProjectiles(0.05);
+  check(tunnel.state === "over", "swept club collision");
   const shark = playing(); shark.pipes = []; shark.stage = 1; shark.score = 30; shark.spawnBoss();
-  shark.updateBoss(config.tralalero.bubbleInterval + 0.05);
-  check(shark.projectiles.length === 1 && shark.projectiles[0].kind === "bubble" && shark.projectiles[0].velocityX === -config.tralalero.bubbleSpeed, "tralalero spits bubbles");
-  shark.birdY = 200; shark.updateBoss(config.tralalero.rest);
-  check(shark.boss.phase === "warn" && shark.boss.laneY === 200, "tralalero marks the player lane");
-  for (let frame = 0; frame <= Math.ceil(config.tralalero.warn / 0.02); frame += 1) shark.updateBoss(0.02);
-  check(shark.boss.phase === "dash" && shark.boss.y === 200, "tralalero dashes after the warning");
+  shark.updateBoss(config.sharking.bubbleInterval + 0.05);
+  check(shark.projectiles.length === 1 && shark.projectiles[0].kind === "bubble" && shark.projectiles[0].velocityX === -config.sharking.bubbleSpeed, "sharking spits bubbles");
+  shark.birdY = 200; shark.updateBoss(config.sharking.rest);
+  check(shark.boss.phase === "warn" && shark.boss.laneY === 200, "sharking marks the player lane");
+  for (let frame = 0; frame <= Math.ceil(config.sharking.warn / 0.02); frame += 1) shark.updateBoss(0.02);
+  check(shark.boss.phase === "dash" && shark.boss.y === 200, "sharking surfs across after the warning");
   const rammed = playing(); rammed.stage = 1; rammed.score = 30; rammed.spawnBoss();
   rammed.update(0.5, 0.02);
   Object.assign(rammed.boss, { phase: "dash", y: rammed.birdY, x: config.birdX + 90 });
   rammed.update(0.5, 0.02);
-  check(rammed.state === "over", "tralalero dash hits the player");
-  const plane = playing(); plane.pipes = []; plane.stage = 2; plane.score = 30; plane.spawnBoss();
-  check(bossRectangle(plane.boss).left > config.birdX + config.birdRadius, "bombardino stays ahead of the player");
-  plane.updateBoss(config.bombardino.dropInterval + 0.01);
-  check(plane.projectiles.length === 1 && plane.projectiles[0].kind === "bomb", "bombardino drops a bomb");
-  const fall = plane.projectiles[0].velocityY; plane.updateProjectiles(0.1);
-  check(plane.projectiles[0].velocityY > fall, "bombs fall with gravity");
-  plane.projectiles = []; plane.boss.health = Math.floor(config.bombardino.health / 2); plane.boss.timer = 0.001; plane.updateBoss(0.01);
-  check(plane.projectiles.length === 2, "enraged bombardino drops two bombs");
+  check(rammed.state === "over", "sharking dash hits the player");
+  const raven = playing(); raven.pipes = []; raven.stage = 2; raven.score = 30; raven.spawnBoss();
+  check(bossRectangle(raven.boss).left > config.birdX + config.birdRadius, "ironbeak stays ahead of the player");
+  raven.updateBoss(config.ironbeak.dropInterval + 0.01);
+  check(raven.projectiles.length === 1 && raven.projectiles[0].kind === "bomb", "ironbeak drops a bomb");
+  const fall = raven.projectiles[0].velocityY; raven.updateProjectiles(0.1);
+  check(raven.projectiles[0].velocityY > fall, "bombs fall with gravity");
+  raven.projectiles = []; raven.boss.health = Math.floor(config.ironbeak.health / 2); raven.boss.timer = 0.001; raven.updateBoss(0.01);
+  check(raven.projectiles.length === 2, "enraged ironbeak drops two bombs");
   const swing = playing(); swing.stage = 2; swing.score = 30; swing.spawnBoss();
   const heights = []; for (let step = 0; step < 400; step += 1) { swing.updateBoss(0.02); heights.push(swing.boss.y); }
-  check(Math.min(...heights) < config.bombardino.y + 5 && Math.max(...heights) > config.bombardino.y + config.bombardino.swing - 5, "bombardino swoops down within reach");
+  check(Math.min(...heights) < config.ironbeak.y + 5 && Math.max(...heights) > config.ironbeak.y + config.ironbeak.swing - 5, "ironbeak swoops down within reach");
+  check(Math.min(...heights) - state.scene.bossImages.ironbeak.displayHeight / 2 >= config.ceiling, "ironbeak sprite stays below the scoreboard");
   const manual = playing(); manual.score = 30; manual.spawnBoss();
   for (let frame = 0; frame < 60; frame += 1) manual.updateFiring(false, 0.05);
   check(manual.lasers.length === 0, "no automatic fire during bosses");
@@ -114,16 +116,16 @@ export function runTests() {
   const fresh = new Game({ random: () => 0.5, smoothing: 0 });
   check(fresh.lives === 3 && !fresh.shield && fresh.nextPowerAt >= config.powerEveryMin, "flight starts with three lives and no power");
   const lives = playing(); lives.lives = 3;
-  lives.launch("bat", 400, lives.birdY, -10000, 0, config.batRadius); lives.updateProjectiles(0.05);
+  lives.launch("club", 400, lives.birdY, -10000, 0, warden.clubRadius); lives.updateProjectiles(0.05);
   check(lives.state === "playing" && lives.lives === 2 && lives.invulnerable === config.invulnerable && lives.projectiles.length === 0, "hit costs one life and grants invulnerability");
-  lives.launch("bat", 400, lives.birdY, -10000, 0, config.batRadius); lives.updateProjectiles(0.05);
+  lives.launch("club", 400, lives.birdY, -10000, 0, warden.clubRadius); lives.updateProjectiles(0.05);
   check(lives.lives === 2, "invulnerability ignores the next hit");
   lives.invulnerable = 0; lives.hurt(); lives.invulnerable = 0; lives.hurt();
   check(lives.lives === 0 && lives.state === "over", "third hit ends the flight");
   const shielded = playing(); shielded.lives = 3; shielded.shield = true; shielded.hurt();
   check(!shielded.shield && shielded.lives === 3 && shielded.invulnerable > 0, "shield absorbs a hit");
-  // Escudo dura 10 s; pipes longe e sem inimigos para nada gastar o escudo antes.
-  const timed = playing(); timed.pipes = [{ x: 5000, gapY: 330, gap: 184, red: false, scored: false }]; timed.enemyTimer = Infinity;
+  // Escudo dura 10 s; pipes longe e sem lacaios para nada gastar o escudo antes.
+  const timed = playing(); timed.pipes = [{ x: 5000, gapY: 330, gap: 184, red: false, scored: false }]; timed.minionTimer = Infinity;
   timed.shield = true;
   check(config.shieldDuration === 10 && timed.shieldTimer === 10, "shield lasts ten seconds");
   for (let step = 0; step < 198; step += 1) timed.update(0.5, 0.05);
@@ -153,29 +155,29 @@ export function runTests() {
   check(collector.tripleTimer > 0 && collector.powers.length === 0 && collector.collected === 1, "flying through a power-up collects it");
   collector.updateFiring(true, 0.1);
   check(collector.lasers.length === 3 && new Set(collector.lasers.map((laser) => laser.y)).size === 3, "triple laser fires three shots");
-  // Inimigos: um tipo por mapa, voam reto um pouco mais rapido que os canos e caem com um laser.
-  check(stages.map((stage) => stage.enemy).join() === "fadat,tralaleirinho,bombo", "one enemy kind per map");
+  // Lacaios: um tipo por mapa, voam reto um pouco mais rapido que os canos e caem com um laser.
+  check(stages.map((stage) => stage.minion).join() === "dartwig,brogull,fragcrow", "one minion kind per map");
   const flyer = playing(); flyer.pipes = [{ x: 5000, gapY: 330, gap: 184, red: false, scored: false }];
-  flyer.enemyTimer = 0.01; flyer.update(0.5, 0.02);
-  const [fada] = flyer.enemies;
-  check(flyer.enemies.length === 1 && fada.kind === "fadat" && fada.x > config.width && flyer.enemyTimer >= config.enemyEveryMin, "fadaT flies in from the right");
-  const fadaStart = { x: fada.x, y: fada.y }; flyer.update(0.5, 0.05);
-  check(Math.abs(fadaStart.x - fada.x - (flyer.speed + config.enemySpeedBonus) * 0.05) < 1e-9 && fada.y === fadaStart.y, "enemies fly straight, a bit faster than pipes");
+  flyer.minionTimer = 0.01; flyer.update(0.5, 0.02);
+  const [dartwig] = flyer.minions;
+  check(flyer.minions.length === 1 && dartwig.kind === "dartwig" && dartwig.x > config.width && flyer.minionTimer >= config.minionEveryMin, "dartwig flies in from the right");
+  const dartwigStart = { x: dartwig.x, y: dartwig.y }; flyer.update(0.5, 0.05);
+  check(Math.abs(dartwigStart.x - dartwig.x - (flyer.speed + config.minionSpeedBonus) * 0.05) < 1e-9 && dartwig.y === dartwigStart.y, "minions fly straight, a bit faster than pipes");
   flyer.fire();
-  for (let step = 0; step < 60 && flyer.enemies.length; step += 1) flyer.updateLasers(0.02);
-  check(flyer.enemies.length === 0 && flyer.defeated === 1 && flyer.lasers.length === 0, "one laser takes an enemy down");
+  for (let step = 0; step < 60 && flyer.minions.length; step += 1) flyer.updateLasers(0.02);
+  check(flyer.minions.length === 0 && flyer.defeated === 1 && flyer.lasers.length === 0, "one laser takes a minion down");
   const shielding = playing(); shielding.pipes = [{ x: 470, gapY: 600, gap: 150, red: false }];
-  shielding.enemies = [{ kind: "fadat", x: 500, y: 180 }]; shielding.lasers = [{ x: 420, y: 180 }];
+  shielding.minions = [{ kind: "dartwig", x: 500, y: 180 }]; shielding.lasers = [{ x: 420, y: 180 }];
   shielding.updateLasers(0.05);
-  check(shielding.enemies.length === 1 && shielding.lasers.length === 0, "pipes shield enemies behind them");
+  check(shielding.minions.length === 1 && shielding.lasers.length === 0, "pipes shield minions behind them");
   const bump = playing(); bump.lives = 3; bump.pipes = [{ x: 5000, gapY: 330, gap: 184, red: false, scored: false }];
-  bump.enemies = [{ kind: "bombo", x: config.birdX + 30, y: bump.birdY }]; bump.update(0.5, 0.02);
-  check(bump.lives === 2 && bump.enemies.length === 0 && bump.invulnerable > 0, "touching an enemy costs a life");
-  const calm = playing(); calm.score = 30; calm.spawnBoss(); calm.enemyTimer = 0; calm.updateEnemies(0.05);
-  check(calm.enemies.length === 0, "no enemies while the boss is on screen");
-  const stageTwo = playing(); stageTwo.stage = 1; stageTwo.enemyTimer = 0; stageTwo.updateEnemies(0.01);
-  const stageThree = playing(); stageThree.stage = 2; stageThree.enemyTimer = 0; stageThree.updateEnemies(0.01);
-  check(stageTwo.enemies[0].kind === "tralaleirinho" && stageThree.enemies[0].kind === "bombo", "tralaleirinho on the beach, bombo in the storm");
+  bump.minions = [{ kind: "fragcrow", x: config.birdX + 30, y: bump.birdY }]; bump.update(0.5, 0.02);
+  check(bump.lives === 2 && bump.minions.length === 0 && bump.invulnerable > 0, "touching a minion costs a life");
+  const calm = playing(); calm.score = 30; calm.spawnBoss(); calm.minionTimer = 0; calm.updateMinions(0.05);
+  check(calm.minions.length === 0, "no minions while the boss is on screen");
+  const stageTwo = playing(); stageTwo.stage = 1; stageTwo.minionTimer = 0; stageTwo.updateMinions(0.01);
+  const stageThree = playing(); stageThree.stage = 2; stageThree.minionTimer = 0; stageThree.updateMinions(0.01);
+  check(stageTwo.minions[0].kind === "brogull" && stageThree.minions[0].kind === "fragcrow", "brogull on the beach, fragcrow in the storm");
   const slow = playing(); slow.pipes = [{ x: 600, gapY: slow.birdY, gap: 184, red: false, scored: false }];
   slow.slowTimer = 5; slow.update(0.5, 0.05);
   const slowStep = 600 - slow.pipes[0].x;
@@ -247,7 +249,7 @@ export function runTests() {
   heard.shieldTimer = 0; audio.observe(heard);
   check(played.length === 0, "shield running out is silent");
   heard.shield = true; heard.hurt(); heard.defeated += 1; audio.observe(heard);
-  check(played.join() === "pop,ouch", "sound follows enemy down and shield hit");
+  check(played.join() === "pop,ouch", "sound follows minion down and shield hit");
   boss.restart();
   check(boss.nextBossAt === 30 && boss.speed === config.initialSpeed && boss.projectiles.length === 0 && boss.stage === 0 && boss.state === "ready", "restart resets difficulty, map and boss");
   const camera = new HandCamera(document.createElement("video"), () => {});
@@ -292,9 +294,8 @@ export function runTests() {
   check(!document.querySelector(".character-picker em") && !document.getElementById("fps"), "no protagonist tag and a single FPS readout");
   // Cano com bloqueio: corpo continuo ate a barra, sem a ponta aberta de baixo.
   const scene = state.scene;
-  check(enemyKinds.length === 3 && enemyKinds.every((kind) => scene.textures.exists(kind) && scene.textures.getPixelAlpha(0, 0, kind) === 0), "enemy sprites load with transparent background");
-  const tripleT = scene.bossImages.tripleT;
-  check(tripleT.displayHeight === config.bossHeight && Math.abs(tripleT.displayWidth - config.bossWidth) < 30 && tripleT.texture.getSourceImage().width === 234, "new Triple T sprite keeps its proportions");
+  check(minionKinds.length === 3 && minionKinds.every((kind) => scene.textures.exists(kind) && scene.textures.getPixelAlpha(0, 0, kind) === 0), "minion sprites load with transparent background");
+  check(stages.every(({ boss }) => { const image = scene.bossImages[boss]; return scene.textures.getPixelAlpha(0, 0, boss) === 0 && image.displayWidth >= config[boss].width && image.displayHeight >= config[boss].height; }), "boss sprites load with transparent background and cover their hit area");
   const hudGame = playing(); hudGame.shield = true; scene.drawHud(hudGame);
   check(scene.powerText.text === `${t("power.shield")} 10s`, "HUD counts down the shield");
   const fullscreenButton = document.getElementById("fullscreen");
@@ -304,10 +305,12 @@ export function runTests() {
   try {
     setLanguage("pt");
     check(document.documentElement.lang === "pt-BR" && document.getElementById("how-title").textContent === "Como jogar"
-      && scene.pointsLabel.text === "PONTOS" && document.getElementById("language").textContent === "EN", "portuguese translates page, game and toggle");
+      && scene.pointsLabel.text === "PONTOS" && document.getElementById("language").textContent === "EN"
+      && stages.map(({ boss }) => t(`boss.${boss}`)).join() === "GUARDIÃO DO VALE,TUBAREI,BICO DE FERRO", "portuguese translates page, game, bosses and toggle");
     setLanguage("en");
     check(document.documentElement.lang === "en" && document.getElementById("how-title").textContent === "How to play"
-      && scene.pointsLabel.text === "POINTS" && document.querySelector('[data-i18n="steps.peace"]').textContent === "Two fingers up: pause", "english translates page, game and toggle");
+      && scene.pointsLabel.text === "POINTS" && document.querySelector('[data-i18n="steps.peace"]').textContent === "Two fingers up: pause"
+      && stages.map(({ boss }) => t(`boss.${boss}`)).join() === "VALLEY WARDEN,SHARKING,IRONBEAK", "english translates page, game, bosses and toggle");
     check(t("score.time", { score: 7, time: "1:05" }) === "7 points in 1:05" && t("Mensagem pronta") === "Mensagem pronta", "texts fill values and pass through plain messages");
   } finally { setLanguage(originalLanguage); }
   const pipeView = scene.makePipeView();

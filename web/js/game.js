@@ -13,8 +13,7 @@ export const config = Object.freeze({
   mouseSpeedScale: 1.25, mouseShotCooldown: 1,
   laserSpeed: 900, laserLength: 30, laserRadius: 3,
   shotCooldown: 0.18, fistHold: 0.08, readySeconds: 1,
-  bossEvery: 30, bossHealth: 8, bossWidth: 210, bossHeight: 240,
-  bossSpeed: 150, throwInterval: 2, batSpeed: 200, batRadius: 11,
+  bossEvery: 30,
   lives: 3, invulnerable: 1.5,
   // No Vale Verde so aparece escudo, e mais espacado; depois, os tres tipos.
   earlyPowerEveryMin: 10, earlyPowerEveryMax: 14, powerEveryMin: 7, powerEveryMax: 10, powerRadius: 15,
@@ -22,19 +21,22 @@ export const config = Object.freeze({
   // Escudo dura ate 10 s (ou ate absorver uma batida). Power-ups aparecem as vezes no
   // vao do cano novo; nas outras, em qualquer altura no espaco livre entre dois canos.
   shieldDuration: 10, powerGapChance: 0.35, powerReach: 130,
-  // Inimigos da fase (antes do chefe): voam em linha reta e caem com um laser.
-  enemyRadius: 24, enemySpeedBonus: 70, firstEnemyDelay: 4, enemyEveryMin: 3.5, enemyEveryMax: 6,
-  tralalero: Object.freeze({ width: 180, height: 130, health: 10, patrolSpeed: 100, rest: 2.6, warn: 1.1, dashSpeed: 620, returnSpeed: 320, bubbleInterval: 1.7, bubbleSpeed: 180, bubbleRadius: 13 }),
-  // O Bombardino desce e sobe devagar (y de 150 a 320) para dar para acerta-lo sem ficar no teto.
-  bombardino: Object.freeze({ width: 210, height: 84, health: 10, y: 150, swing: 170, swingSpeed: 0.9, minX: 400, maxX: 700, patrolSpeed: 110, dropInterval: 1.9, rageInterval: 1.4, bombSpeed: 230, gravity: 140, bombRadius: 12 }),
+  // Lacaios da fase (antes do chefe): voam em linha reta e caem com um laser.
+  minionRadius: 24, minionSpeedBonus: 70, firstMinionDelay: 4, minionEveryMin: 3.5, minionEveryMax: 6,
+  // Chefes: width e height sao a area de acerto (o desenho e um pouco maior).
+  valleyWarden: Object.freeze({ width: 170, height: 240, health: 8, speed: 150, throwInterval: 2, clubSpeed: 200, clubRadius: 11 }),
+  sharking: Object.freeze({ width: 180, height: 130, health: 10, patrolSpeed: 100, rest: 2.6, warn: 1.1, dashSpeed: 620, returnSpeed: 320, bubbleInterval: 1.7, bubbleSpeed: 180, bubbleRadius: 13 }),
+  // O Ironbeak desce e sobe devagar (y de 172 a 332) para dar para acerta-lo sem encostar no placar.
+  ironbeak: Object.freeze({ width: 200, height: 120, health: 10, y: 172, swing: 160, swingSpeed: 0.9, minX: 400, maxX: 700, patrolSpeed: 110, dropInterval: 1.9, rageInterval: 1.4, bombSpeed: 230, gravity: 140, bombRadius: 12 }),
   cameraTop: 0.15, cameraBottom: 0.85, responsiveness: 4,
 });
 
-// Campanha: cada mapa termina no seu chefe; vencer os tres encerra o jogo.
+// Campanha: em cada mapa um lacaio cruza a tela ate o chefe chegar; vencer os
+// tres chefes encerra o jogo. Os nomes na tela vem do i18n (boss.*).
 export const stages = Object.freeze([
-  Object.freeze({ key: "valley", boss: "tripleT", bossName: "TRIPLE T", enemy: "fadat" }),
-  Object.freeze({ key: "beach", boss: "tralalero", bossName: "TRALALERO TRALALA", enemy: "tralaleirinho" }),
-  Object.freeze({ key: "storm", boss: "bombardino", bossName: "BOMBARDINO CROCODILO", enemy: "bombo" }),
+  Object.freeze({ key: "valley", boss: "valleyWarden", minion: "dartwig" }),
+  Object.freeze({ key: "beach", boss: "sharking", minion: "brogull" }),
+  Object.freeze({ key: "storm", boss: "ironbeak", minion: "fragcrow" }),
 ]);
 
 // Power-ups: escudo (10 s ou uma batida), camera lenta (mundo a 50% por 5 s) e
@@ -63,14 +65,8 @@ export function barrierRectangle(pipe) {
     : null;
 }
 
-export function bossSize(kind) {
-  if (kind === "tralalero") return config.tralalero;
-  if (kind === "bombardino") return config.bombardino;
-  return { width: config.bossWidth, height: config.bossHeight, health: config.bossHealth };
-}
-
 export function bossRectangle(boss) {
-  const { width, height } = bossSize(boss.kind);
+  const { width, height } = config[boss.kind];
   return rectangle(boss.x - width / 2, boss.y - height / 2, width, height);
 }
 
@@ -227,8 +223,8 @@ export class Game {
     this.tripleTimer = 0;
     this.collected = 0;
     this.powers = [];
-    this.enemies = [];
-    this.enemyTimer = config.firstEnemyDelay;
+    this.minions = [];
+    this.minionTimer = config.firstMinionDelay;
     this.defeated = 0;
     this.broken = 0;
     this.pipesCreated = 0;
@@ -353,7 +349,7 @@ export class Game {
     this.powers.forEach((power) => { power.x -= this.speed * world; });
     this.spawnBoss();
     this.updateBoss(world);
-    this.updateEnemies(world);
+    this.updateMinions(world);
     this.updateLasers(dt);
     this.updateProjectiles(world);
     if (this.boss && Phaser.Geom.Intersects.CircleToRectangle(new Phaser.Geom.Circle(config.birdX, this.birdY, config.birdRadius), bossRectangle(this.boss))) this.hurt();
@@ -405,16 +401,16 @@ export class Game {
         if (barrier && intersects(sweep, barrier)) { hit = pipe; hitBarrier = true; break; }
         if (!this.boss && pipeRectangles(pipe).some((body) => intersects(sweep, body))) { hit = pipe; break; }
       }
-      // Inimigo mais proximo atingido antes de um cano ou do chefe cai com um laser.
-      let enemy = null;
-      for (const candidate of this.enemies) {
-        if (Phaser.Geom.Intersects.CircleToRectangle(new Phaser.Geom.Circle(candidate.x, candidate.y, config.enemyRadius), sweep) && (!enemy || candidate.x < enemy.x)) enemy = candidate;
+      // Lacaio mais proximo atingido antes de um cano ou do chefe cai com um laser.
+      let minion = null;
+      for (const candidate of this.minions) {
+        if (Phaser.Geom.Intersects.CircleToRectangle(new Phaser.Geom.Circle(candidate.x, candidate.y, config.minionRadius), sweep) && (!minion || candidate.x < minion.x)) minion = candidate;
       }
       const bossLeft = this.boss && intersects(sweep, bossRectangle(this.boss)) ? bossRectangle(this.boss).left : Infinity;
-      if (enemy && (!hit || enemy.x - config.enemyRadius < hit.x) && enemy.x - config.enemyRadius < bossLeft) {
-        this.enemies.splice(this.enemies.indexOf(enemy), 1);
+      if (minion && (!hit || minion.x - config.minionRadius < hit.x) && minion.x - config.minionRadius < bossLeft) {
+        this.minions.splice(this.minions.indexOf(minion), 1);
         this.defeated += 1;
-        this.impacts.push({ x: enemy.x, y: enemy.y, remaining: 0.24 });
+        this.impacts.push({ x: minion.x, y: minion.y, remaining: 0.24 });
         continue;
       }
       if (this.boss && intersects(sweep, bossRectangle(this.boss)) && (!hit || bossRectangle(this.boss).left < hit.x)) {
@@ -433,14 +429,14 @@ export class Game {
   spawnBoss() {
     if (this.boss || this.stage >= stages.length || this.score < this.nextBossAt) return;
     const kind = stages[this.stage].boss;
-    const { width, health } = bossSize(kind);
+    const { width, health } = config[kind];
     const middle = (config.ceiling + config.floor) / 2;
-    const y = kind === "bombardino" ? config.bombardino.y : middle;
-    const x = kind === "bombardino" ? config.bombardino.maxX : config.width - width / 2 - 24;
+    const y = kind === "ironbeak" ? config.ironbeak.y : middle;
+    const x = kind === "ironbeak" ? config.ironbeak.maxX : config.width - width / 2 - 24;
     this.boss = {
       kind, x, y, homeX: x, health, maxHealth: health, direction: 1, hurt: 0,
-      timer: kind === "tralalero" ? config.tralalero.rest : kind === "bombardino" ? config.bombardino.dropInterval : config.throwInterval,
-      phase: "idle", laneY: y, shotTimer: kind === "tralalero" ? config.tralalero.bubbleInterval : 0,
+      timer: kind === "sharking" ? config.sharking.rest : kind === "ironbeak" ? config.ironbeak.dropInterval : config.valleyWarden.throwInterval,
+      phase: "idle", laneY: y, shotTimer: kind === "sharking" ? config.sharking.bubbleInterval : 0,
     };
     this.nextBossAt = Infinity;
   }
@@ -454,22 +450,22 @@ export class Game {
     else this.nextBossAt = this.score + config.bossEvery;
   }
 
-  // Inimigos da fase: enquanto o chefe nao chega, surgem na direita e cruzam a tela
+  // Lacaios da fase: enquanto o chefe nao chega, surgem na direita e cruzam a tela
   // em linha reta, um pouco mais rapidos que os canos. Encostar custa uma vida.
-  updateEnemies(dt) {
+  updateMinions(dt) {
     if (!this.boss && this.stage < stages.length) {
-      this.enemyTimer -= dt;
-      if (this.enemyTimer <= 0) {
-        const margin = config.enemyRadius + 30;
-        this.enemies.push({ kind: stages[this.stage].enemy, x: config.width + config.enemyRadius + 20, y: config.ceiling + margin + this.random() * (config.floor - config.ceiling - 2 * margin) });
-        this.enemyTimer = config.enemyEveryMin + this.random() * (config.enemyEveryMax - config.enemyEveryMin);
+      this.minionTimer -= dt;
+      if (this.minionTimer <= 0) {
+        const margin = config.minionRadius + 30;
+        this.minions.push({ kind: stages[this.stage].minion, x: config.width + config.minionRadius + 20, y: config.ceiling + margin + this.random() * (config.floor - config.ceiling - 2 * margin) });
+        this.minionTimer = config.minionEveryMin + this.random() * (config.minionEveryMax - config.minionEveryMin);
       }
     }
-    const speed = this.speed + config.enemySpeedBonus;
-    this.enemies = this.enemies.filter((enemy) => {
-      enemy.x -= speed * dt;
-      if (Math.hypot(enemy.x - config.birdX, enemy.y - this.birdY) <= config.birdRadius + config.enemyRadius && this.hurt()) return false;
-      return enemy.x > -config.enemyRadius - 20;
+    const speed = this.speed + config.minionSpeedBonus;
+    this.minions = this.minions.filter((minion) => {
+      minion.x -= speed * dt;
+      if (Math.hypot(minion.x - config.birdX, minion.y - this.birdY) <= config.birdRadius + config.minionRadius && this.hurt()) return false;
+      return minion.x > -config.minionRadius - 20;
     });
   }
 
@@ -481,9 +477,9 @@ export class Game {
     const boss = this.boss;
     if (!boss) return;
     boss.hurt = Math.max(0, boss.hurt - dt);
-    if (boss.kind === "tralalero") this.updateTralalero(boss, dt);
-    else if (boss.kind === "bombardino") this.updateBombardino(boss, dt);
-    else this.updateTripleT(boss, dt);
+    if (boss.kind === "sharking") this.updateSharking(boss, dt);
+    else if (boss.kind === "ironbeak") this.updateIronbeak(boss, dt);
+    else this.updateValleyWarden(boss, dt);
   }
 
   patrolVertically(boss, height, speed, dt) {
@@ -494,23 +490,26 @@ export class Game {
     if (boss.y <= top) { boss.y = top; boss.direction = 1; }
   }
 
-  // Triple T: sobe e desce arremessando tacos na direcao do jogador.
-  updateTripleT(boss, dt) {
-    this.patrolVertically(boss, config.bossHeight, config.bossSpeed, dt);
+  // Valley Warden (Guardiao do Vale): sobe e desce arremessando porretes na
+  // direcao do jogador.
+  updateValleyWarden(boss, dt) {
+    const warden = config.valleyWarden;
+    this.patrolVertically(boss, warden.height, warden.speed, dt);
     boss.timer -= dt;
     if (boss.timer <= 0) {
-      const x = boss.x - config.bossWidth / 2;
+      const x = boss.x - warden.width / 2;
       const horizontal = config.birdX - x;
       const vertical = this.birdY - boss.y;
       const length = Math.hypot(horizontal, vertical);
-      this.launch("bat", x, boss.y, horizontal / length * config.batSpeed, vertical / length * config.batSpeed, config.batRadius);
-      boss.timer += config.throwInterval;
+      this.launch("club", x, boss.y, horizontal / length * warden.clubSpeed, vertical / length * warden.clubSpeed, warden.clubRadius);
+      boss.timer += warden.throwInterval;
     }
   }
 
-  // Tralalero Tralala: marca a altura do jogador, avisa e atravessa a tela.
-  updateTralalero(boss, dt) {
-    const shark = config.tralalero;
+  // Sharking (Tubarei): solta bolhas, marca a altura do jogador, avisa e
+  // atravessa a tela na prancha.
+  updateSharking(boss, dt) {
+    const shark = config.sharking;
     if (boss.phase === "idle") {
       this.patrolVertically(boss, shark.height, shark.patrolSpeed, dt);
       boss.shotTimer -= dt;
@@ -537,21 +536,21 @@ export class Game {
     }
   }
 
-  // Bombardino Crocodilo: patrulha a parte de cima soltando bombas, descendo e
-  // subindo devagar; com metade da vida, solta duas bombas em leque.
-  updateBombardino(boss, dt) {
-    const plane = config.bombardino;
+  // Ironbeak (Bico de Ferro): patrulha a parte de cima soltando bombas, descendo
+  // e subindo devagar; com metade da vida, solta duas bombas em leque.
+  updateIronbeak(boss, dt) {
+    const raven = config.ironbeak;
     boss.swingTime = (boss.swingTime ?? 0) + dt;
-    boss.y = plane.y + plane.swing * (1 - Math.cos(boss.swingTime * plane.swingSpeed)) / 2;
-    boss.x += -boss.direction * plane.patrolSpeed * dt;
-    if (boss.x <= plane.minX) { boss.x = plane.minX; boss.direction = -1; }
-    if (boss.x >= plane.maxX) { boss.x = plane.maxX; boss.direction = 1; }
+    boss.y = raven.y + raven.swing * (1 - Math.cos(boss.swingTime * raven.swingSpeed)) / 2;
+    boss.x += -boss.direction * raven.patrolSpeed * dt;
+    if (boss.x <= raven.minX) { boss.x = raven.minX; boss.direction = -1; }
+    if (boss.x >= raven.maxX) { boss.x = raven.maxX; boss.direction = 1; }
     boss.timer -= dt;
     if (boss.timer <= 0) {
       const enraged = boss.health * 2 <= boss.maxHealth;
       const speeds = enraged ? [0.8, 1.2] : [1];
-      for (const factor of speeds) this.launch("bomb", boss.x, boss.y + plane.height / 2 - 10, -plane.bombSpeed * factor, 0, plane.bombRadius, plane.gravity);
-      boss.timer += enraged ? plane.rageInterval : plane.dropInterval;
+      for (const factor of speeds) this.launch("bomb", boss.x, boss.y + raven.height / 2 - 10, -raven.bombSpeed * factor, 0, raven.bombRadius, raven.gravity);
+      boss.timer += enraged ? raven.rageInterval : raven.dropInterval;
     }
   }
 

@@ -14,7 +14,7 @@ abaixou, ele desce. Não tem gravidade nem pulo. Fechar o punho dispara um laser
 o sinal de paz (✌) pausa o jogo.
 
 O projeto começou como um estudo de visão computacional aplicada a jogos e cresceu
-até virar uma campanha completa: três mapas, inimigos, power-ups e três chefes.
+até virar uma campanha completa: três mapas, lacaios, power-ups e três chefes.
 Tudo roda no navegador, sem servidor, e o vídeo da câmera nunca sai do seu
 computador. O jogo está disponível em inglês e em português.
 
@@ -31,7 +31,7 @@ computador. O jogo está disponível em inglês e em português.
 - **Quatro personagens.** Handy, PoMMMbo, Claraia e Gavian, cada um com a cor do
   próprio laser e do próprio escudo. Dá para trocar no meio da partida.
 - **Campanha com começo, meio e fim.** Vale Verde, Praia Tropical e Tempestade
-  Final, cada mapa com cenário, canos, bloqueios, inimigo e chefe próprios.
+  Final, cada mapa com cenário, canos, bloqueios, lacaio e chefe próprios.
 - **3 vidas e power-ups.** Escudo, câmera lenta e laser triplo aparecem em lugares
   aleatórios, mas sempre alcançáveis.
 - **Dificuldade que cresce aos poucos.** O jogo acelera conforme você avança e
@@ -54,9 +54,10 @@ computador. O jogo está disponível em inglês e em português.
 3. Clique em **Jogar** ou simplesmente **feche a mão** para começar.
 4. Suba e desça a mão para passar pelo vão dos canos. Cada cano vale um ponto.
 5. **Feche o punho** para atirar: o laser quebra os bloqueios que fecham alguns vãos
-   e derruba os inimigos que cruzam a tela.
+   e derruba os lacaios do chefe que cruzam a tela.
 6. Você tem **3 vidas**. Depois de cada batida, o pássaro fica invencível por 1,5 s.
-7. A cada 30 canos, chega o chefe do mapa. Vença os três para terminar o jogo.
+7. A cada 30 canos, chega o chefe do mapa: Guardião do Vale, Tubarei e Bico de
+   Ferro. Vença os três para terminar o jogo.
 
 Para pausar, faça o **sinal de paz** (indicador e médio levantados, os outros dedos
 dobrados) por um instante; feche a mão para continuar. Se a mão sair do quadro, o
@@ -74,7 +75,7 @@ Sem webcam, o **modo Mouse** permite testar o jogo com o cursor. Como clicar é 
 mais fácil do que fechar a mão, esse modo é 25% mais rápido e o laser recarrega em 1 s.
 
 <details>
-<summary><strong>Regras em detalhe: dificuldade, power-ups, inimigos e chefes</strong></summary>
+<summary><strong>Regras em detalhe: dificuldade, power-ups, lacaios e chefes</strong></summary>
 
 ### Dificuldade
 
@@ -104,30 +105,30 @@ vizinhos, para dar tempo de buscar e voltar.
 - **Câmera lenta:** canos, chefe e projéteis andam a 50% por 5 s.
 - **Laser triplo:** três lasers por disparo durante 6 s.
 
-### Inimigos
+### Lacaios
 
-Até o chefe chegar, um inimigo entra pela direita a cada 3,5 a 6 s e atravessa a
-tela em linha reta, um pouco mais rápido que os canos. Um tiro derruba; encostar
-custa uma vida. Um cano no caminho protege o inimigo do laser.
+Até o chefe chegar, um dos lacaios dele entra pela direita a cada 3,5 a 6 s e
+atravessa a tela em linha reta, um pouco mais rápido que os canos. Um tiro derruba;
+encostar custa uma vida. Um cano no caminho protege o lacaio do laser.
 
-| Mapa | Inimigo |
-| --- | --- |
-| 01 · Vale Verde | **fadaT** |
-| 02 · Praia Tropical | **Tralaleirinho** |
-| 03 · Tempestade Final | **Bombo** |
+| Mapa | Lacaio | Quem é |
+| --- | --- | --- |
+| 01 · Vale Verde | **Zarabrotinho** (Dartwig) | Um brotinho armado com uma zarabatana |
+| 02 · Praia Tropical | **Gaimano** (Brogull) | Uma gaivota de óculos escuros, numa boia |
+| 03 · Tempestade Final | **Kamicorvo** (Fragcrow) | Um corvo de capacete de piloto, com uma granada |
 
 ### Chefes
 
 | Mapa | Chefe | Como ataca | Vida |
 | --- | --- | --- | --- |
-| 01 · Vale Verde | **Triple T** | Sobe e desce arremessando tacos | 8 |
-| 02 · Praia Tropical | **Tralalero Tralala** | Solta bolhas, marca a sua altura e atravessa a tela nela | 10 |
-| 03 · Tempestade Final | **Bombardino Crocodilo** | Larga bombas; com metade da vida, solta duas de uma vez | 10 |
+| 01 · Vale Verde | **Guardião do Vale** (Valley Warden) | Sobe e desce arremessando porretes com espinhos | 8 |
+| 02 · Praia Tropical | **Tubarei** (Sharking) | Solta bolhas, marca a sua altura e atravessa a tela nela, de prancha | 10 |
+| 03 · Tempestade Final | **Bico de Ferro** (Ironbeak) | Larga bombas; com metade da vida, solta duas de uma vez | 10 |
 
 Com um chefe na tela, os lasers atravessam os canos. Não existe tiro automático:
 cada disparo é um punho fechado (ou um clique).
 
-![Claraia enfrentando o Triple T](docs/images/boss.png)
+![Claraia enfrentando o Guardião do Vale](docs/images/boss.png)
 
 </details>
 
@@ -191,7 +192,7 @@ web/                    O jogo (site estático publicado no Netlify)
   index.html, style.css Página do jogo, painel da câmera e "Como jogar"
   js/                   app, game (regras), scene (Phaser), camera,
                         tracking-worker (MediaPipe), sound, i18n, tests
-  assets/               Personagens, chefes, inimigos, cenários, canos e ícones
+  assets/               Personagens, chefes, lacaios, cenários, canos e ícones
   _headers              Política de cache e cabeçalhos de segurança
 tools/                  Servidor local e os scripts que geram os sprites
 tests/                  Testes no navegador (Playwright) e verificações do site
@@ -206,10 +207,11 @@ elas em `art/source/`, os scripts de `tools/` recortam o fundo, reduzem para o
 tamanho do jogo e alinham canos e bloqueios às áreas de colisão:
 
 ```bash
-# Personagens, chefes e inimigos: remove o fundo branco e redimensiona
+# Personagens, chefes e lacaios: remove o fundo branco e redimensiona
 python tools/cutout.py art/source/handy.jpg web/assets/characters/handy.png --width 256
-python tools/cutout.py art/source/bombardino.jpg web/assets/bosses/bombardino.png --width 250 --split-bomb web/assets/bosses/bomb.png
-python tools/cutout.py recorte-fadat.png web/assets/enemies/fadat.png --width 62 --fill-holes 200
+python tools/cutout.py art/source/valley_warden.jpg web/assets/bosses/valley_warden.png --height 240 --fill-holes 200
+# Os três lacaios estão na mesma folha; --pick escolhe um, contando da esquerda
+python tools/cutout.py art/source/minions.jpg web/assets/minions/dartwig.png --height 60 --pick 1 --of 3 --fill-holes 200
 
 # Canos e bloqueios das três fases
 python tools/pipes.py art/source/canos.jpg art/source/bloqueios.jpg web/assets/stages
@@ -227,7 +229,7 @@ python -m unittest discover -s tests -v
 
 Os testes não precisam de webcam. Eles abrem o jogo em um navegador headless, no
 tamanho de computador e de celular, e verificam regras, dificuldade, chefes,
-inimigos, power-ups, gestos, filtro, calibração, som, desenho e os dois idiomas. No
+lacaios, power-ups, gestos, filtro, calibração, som, desenho e os dois idiomas. No
 Windows, dá para usar o Edge instalado em vez de baixar o Chromium, definindo
 `HANDY_BIRD_BROWSER=msedge`. No GitHub, o workflow **Tests** roda tudo a cada push.
 

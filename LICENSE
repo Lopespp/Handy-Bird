@@ -25,7 +25,7 @@ SOFTWARE.
 Scope / Escopo
 
 This license covers the source code and documentation of Handy Bird only.
-It does NOT cover the images in web/assets/ (characters, bosses, enemies,
+It does NOT cover the images in web/assets/ (characters, bosses, minions,
 stages, brand), the original illustrations they were made from
 (not included in this repository), or the screenshots in docs/images/. Those
 images depict real people or third-party characters, were provided for this
@@ -34,7 +34,7 @@ permission from their respective owners. Third-party libraries and models
 (MediaPipe, Phaser, Lucide, OpenCV, NumPy, Playwright) keep their own licenses.
 
 Esta licença cobre apenas o código-fonte e a documentação do Handy Bird.
-Ela NÃO cobre as imagens em web/assets/ (personagens, chefes, inimigos,
+Ela NÃO cobre as imagens em web/assets/ (personagens, chefes, lacaios,
 fases, marca), as ilustrações originais usadas para criá-las
 (que não fazem parte deste repositório) nem as capturas em docs/images/. Essas
 imagens retratam pessoas reais ou personagens de terceiros, foram cedidas

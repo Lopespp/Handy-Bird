@@ -54,7 +54,7 @@ export class Sound {
   crash() { this.tone({ from: 440, to: 60, duration: 0.45, type: "triangle", volume: 0.12 }); }
 
   // Compara o estado do jogo entre quadros e toca o efeito de cada evento.
-  // Nao altera as regras: apenas observa pontos, tiros, placas, inimigos, chefe e fim.
+  // Nao altera as regras: apenas observa pontos, tiros, placas, lacaios, chefe e fim.
   observe(game) {
     const current = {
       score: game.score, cooldown: game.shotCooldown, state: game.state,

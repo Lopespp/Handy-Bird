@@ -14,7 +14,7 @@ lower it and it dives. There is no gravity and no jumping. Make a fist to fire a
 laser, and hold up a peace sign (✌) to pause.
 
 The project started as a computer vision study applied to games and grew into a
-full campaign: three maps, enemies, power-ups and three bosses. Everything runs in
+full campaign: three maps, minions, power-ups and three bosses. Everything runs in
 the browser, with no server, and the camera video never leaves your computer. The
 game is available in English and Portuguese.
 
@@ -31,7 +31,7 @@ game is available in English and Portuguese.
 - **Four characters.** Handy, PoMMMbo, Claraia and Gavian, each with its own laser
   and shield color. You can switch in the middle of a run.
 - **A campaign with an ending.** Green Valley, Tropical Beach and Final Storm, each
-  with its own scenery, pipes, blockers, enemy and boss.
+  with its own scenery, pipes, blockers, minion and boss.
 - **3 lives and power-ups.** Shield, slow motion and triple laser appear in random
   spots that are always reachable.
 - **Difficulty that ramps up gradually.** The game speeds up as you progress and
@@ -53,9 +53,10 @@ game is available in English and Portuguese.
 3. Click **Play** or simply **make a fist** to start.
 4. Move your hand up and down to fly through the pipe gaps. Each pipe is one point.
 5. **Make a fist** to shoot: the laser breaks the blockers that close some gaps and
-   takes down the enemies crossing the screen.
+   takes down the boss's minions crossing the screen.
 6. You have **3 lives**. After each hit, the bird is invulnerable for 1.5 s.
-7. Every 30 pipes, the map's boss shows up. Beat all three to finish the game.
+7. Every 30 pipes, the map's boss shows up: Valley Warden, Sharking and Ironbeak.
+   Beat all three to finish the game.
 
 To pause, hold a **peace sign** (index and middle fingers up, the others folded)
 for a moment; make a fist to keep going. If your hand leaves the frame, the game
@@ -74,7 +75,7 @@ clicking is much easier than closing your hand, this mode is 25% faster and the
 laser recharges in 1 s.
 
 <details>
-<summary><strong>Detailed rules: difficulty, power-ups, enemies and bosses</strong></summary>
+<summary><strong>Detailed rules: difficulty, power-ups, minions and bosses</strong></summary>
 
 ### Difficulty
 
@@ -105,30 +106,30 @@ to the neighboring gaps, so there is time to grab it and get back.
 - **Slow motion:** pipes, boss and projectiles move at 50% for 5 s.
 - **Triple laser:** three lasers per shot for 6 s.
 
-### Enemies
+### Minions
 
-Until the boss arrives, an enemy enters from the right every 3.5 to 6 s and
-crosses the screen in a straight line, a little faster than the pipes. One shot
-takes it down; touching it costs a life. A pipe in the way protects the enemy.
+Until the boss arrives, one of its minions enters from the right every 3.5 to 6 s
+and crosses the screen in a straight line, a little faster than the pipes. One shot
+takes it down; touching it costs a life. A pipe in the way protects the minion.
 
-| Map | Enemy |
-| --- | --- |
-| 01 · Green Valley | **fadaT** |
-| 02 · Tropical Beach | **Tralaleirinho** |
-| 03 · Final Storm | **Bombo** |
+| Map | Minion | Who it is |
+| --- | --- | --- |
+| 01 · Green Valley | **Dartwig** | A little sprout armed with a blowgun |
+| 02 · Tropical Beach | **Brogull** | A seagull in sunglasses, riding a swim ring |
+| 03 · Final Storm | **Fragcrow** | A crow in a pilot helmet, carrying a grenade |
 
 ### Bosses
 
 | Map | Boss | Attack | Health |
 | --- | --- | --- | --- |
-| 01 · Green Valley | **Triple T** | Moves up and down throwing bats | 8 |
-| 02 · Tropical Beach | **Tralalero Tralala** | Blows bubbles, marks your height and dashes across it | 10 |
-| 03 · Final Storm | **Bombardino Crocodilo** | Drops bombs; at half health, drops two at once | 10 |
+| 01 · Green Valley | **Valley Warden** | Moves up and down throwing spiked clubs | 8 |
+| 02 · Tropical Beach | **Sharking** | Blows bubbles, marks your height and surfs across it | 10 |
+| 03 · Final Storm | **Ironbeak** | Drops bombs; at half health, drops two at once | 10 |
 
 With a boss on screen, lasers go through pipes. There is no auto-fire: every shot
 is a closed fist (or a click).
 
-![Claraia fighting Triple T](docs/images/boss.png)
+![Claraia fighting the Valley Warden](docs/images/boss.png)
 
 </details>
 
@@ -194,7 +195,7 @@ web/                    The game (static site published on Netlify)
   index.html, style.css Game page, camera panel and "How to play"
   js/                   app, game (rules), scene (Phaser), camera,
                         tracking-worker (MediaPipe), sound, i18n, tests
-  assets/               Characters, bosses, enemies, scenery, pipes and icons
+  assets/               Characters, bosses, minions, scenery, pipes and icons
   _headers              Cache policy and security headers
 tools/                  Local server and the scripts that generate the sprites
 tests/                  Browser tests (Playwright) and site checks
@@ -209,10 +210,11 @@ With them in `art/source/`, the scripts in `tools/` remove the background, resiz
 to game size and line the pipes and blockers up with the collision areas:
 
 ```bash
-# Characters, bosses and enemies: removes the white background and resizes
+# Characters, bosses and minions: removes the white background and resizes
 python tools/cutout.py art/source/handy.jpg web/assets/characters/handy.png --width 256
-python tools/cutout.py art/source/bombardino.jpg web/assets/bosses/bombardino.png --width 250 --split-bomb web/assets/bosses/bomb.png
-python tools/cutout.py fadat-crop.png web/assets/enemies/fadat.png --width 62 --fill-holes 200
+python tools/cutout.py art/source/valley_warden.jpg web/assets/bosses/valley_warden.png --height 240 --fill-holes 200
+# The three minions share one sheet; --pick chooses one, counting from the left
+python tools/cutout.py art/source/minions.jpg web/assets/minions/dartwig.png --height 60 --pick 1 --of 3 --fill-holes 200
 
 # Pipes and blockers for the three maps
 python tools/pipes.py art/source/canos.jpg art/source/bloqueios.jpg web/assets/stages
@@ -229,7 +231,7 @@ python -m unittest discover -s tests -v
 ```
 
 The tests need no webcam. They open the game in a headless browser, at desktop
-and phone sizes, and check rules, difficulty, bosses, enemies, power-ups,
+and phone sizes, and check rules, difficulty, bosses, minions, power-ups,
 gestures, the filter, calibration, sound, drawing and both languages. On Windows,
 you can use the installed Edge instead of downloading Chromium by setting
 `HANDY_BIRD_BROWSER=msedge`. On GitHub, the **Tests** workflow runs everything on

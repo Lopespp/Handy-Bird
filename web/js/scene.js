@@ -27,7 +27,7 @@ const powerColors = { shield: 0x2f8fdc, slow: 0x8a5cd6, triple: 0xe0a72e };
 // anel do escudo em volta deles, na cor do laser de cada personagem.
 const heroSize = { width: 84, height: 68 };
 const shieldRadius = 46;
-export const enemyKinds = Object.freeze(stages.map((stage) => stage.enemy));
+export const minionKinds = Object.freeze(stages.map((stage) => stage.minion));
 
 export function createScene(state, afterUpdate, setPointer, loadFailure) {
   return class FlightScene extends Phaser.Scene {
@@ -39,11 +39,11 @@ export function createScene(state, afterUpdate, setPointer, loadFailure) {
         this.load.image(`blocker-${key}`, asset(`stages/blocker-${key}.png`));
       }
       this.load.json("pipes", asset("stages/pipes.json"));
-      this.load.image("tripleT", asset("bosses/triple_t.png"));
-      this.load.image("tralalero", asset("bosses/tralalero.png"));
-      this.load.image("bombardino", asset("bosses/bombardino.png"));
+      this.load.image("valleyWarden", asset("bosses/valley_warden.png"));
+      this.load.image("sharking", asset("bosses/sharking.png"));
+      this.load.image("ironbeak", asset("bosses/ironbeak.png"));
       this.load.image("bomb", asset("bosses/bomb.png"));
-      for (const kind of enemyKinds) this.load.image(kind, asset(`enemies/${kind}.png`));
+      for (const kind of minionKinds) this.load.image(kind, asset(`minions/${kind}.png`));
       this.load.on("loaderror", () => loadFailure(t("error.images")));
     }
 
@@ -55,20 +55,19 @@ export function createScene(state, afterUpdate, setPointer, loadFailure) {
       this.buildPipeColumns();
       this.dynamic = this.add.graphics();
       this.hero = this.add.image(config.birdX, 350, state.character);
-      this.bossImages = {
-        tripleT: this.add.image(706, 350, "tripleT").setVisible(false),
-        tralalero: this.add.image(0, 0, "tralalero").setVisible(false),
-        bombardino: this.add.image(0, 0, "bombardino").setVisible(false),
-      };
-      const tripleT = this.bossImages.tripleT;
-      tripleT.setScale(config.bossHeight / tripleT.height);
+      // Sprites dos chefes no tamanho final; a area de acerto fica em config[chefe].
+      this.bossImages = Object.fromEntries(stages.map(({ boss }) => [boss, this.add.image(0, 0, boss).setVisible(false)]));
       this.shotImages = [];
-      this.enemyImages = [];
-      const bat = this.make.graphics({ x: 0, y: 0, add: false });
-      bat.fillStyle(0x4d301d).fillRoundedRect(0, 1, 29, 14, 5).fillRect(24, 5, 20, 7);
-      bat.fillStyle(0xbc783d).fillRoundedRect(2, 3, 25, 10, 4).fillRect(26, 7, 16, 3);
-      bat.lineStyle(2, 0xe6ac65).lineBetween(6, 5, 22, 5);
-      bat.generateTexture("bat", 44, 16); bat.destroy();
+      this.minionImages = [];
+      // Porrete do Valley Warden: cabeca grossa com espinhos, cabo fino e cipo enrolado.
+      const club = this.make.graphics({ x: 0, y: 0, add: false });
+      club.fillStyle(0x3b2412).fillTriangle(6, 3, 10, 0, 12, 4).fillTriangle(16, 3, 20, 0, 21, 4).fillTriangle(8, 17, 12, 20, 14, 17).fillTriangle(18, 17, 22, 20, 23, 17);
+      club.fillRoundedRect(0, 2, 28, 16, 6).fillRect(25, 7, 21, 7);
+      club.fillStyle(0x7a4a24).fillRoundedRect(2, 4, 24, 12, 5).fillRect(27, 9, 17, 3);
+      club.lineStyle(2, 0xa8703c).lineBetween(5, 6, 20, 6);
+      club.fillStyle(0x3b2412).fillCircle(9, 11, 1.5).fillCircle(18, 12, 1.5);
+      club.lineStyle(2, 0x5f8f32).lineBetween(12, 4, 16, 16).lineBetween(19, 4, 23, 16);
+      club.generateTexture("club", 46, 20); club.destroy();
       this.header = this.add.graphics().setDepth(5);
       this.hud = this.add.graphics().setDepth(6);
       const display = "Fredoka, Bahnschrift, 'Trebuchet MS', sans-serif";
@@ -81,7 +80,7 @@ export function createScene(state, afterUpdate, setPointer, loadFailure) {
       const scoreStyle = { fontFamily: display, fontSize: "36px", fontStyle: "bold", color: "#1d2140" };
       this.score = this.add.text(606, 31, "00", scoreStyle).setDepth(6);
       this.best = this.add.text(708, 31, "00", scoreStyle).setDepth(6);
-      this.bossTitle = this.add.text(350, 16, stages[0].bossName, { ...small, color: "#de5a48" }).setVisible(false).setDepth(6);
+      this.bossTitle = this.add.text(350, 16, "", { ...small, color: "#de5a48" }).setVisible(false).setDepth(6);
       this.health = this.add.graphics().setDepth(6);
       this.input.on("pointermove", (pointer) => setPointer(pointer.y));
       this.input.on("pointerdown", (pointer) => { setPointer(pointer.y); state.pointerFist = true; });
@@ -143,9 +142,9 @@ export function createScene(state, afterUpdate, setPointer, loadFailure) {
       for (const image of Object.values(this.bossImages)) image.setVisible(false);
       const boss = game.boss;
       if (!boss) return;
-      if (boss.kind === "tralalero" && boss.phase === "warn" && Math.floor(game.elapsed * 10) % 2 === 0) {
-        graphics.fillStyle(0xde5a48, 0.28).fillRect(0, boss.laneY - config.tralalero.height / 2, 820, config.tralalero.height);
-        graphics.lineStyle(2, 0xde5a48, 0.9).strokeRect(0, boss.laneY - config.tralalero.height / 2, 820, config.tralalero.height);
+      if (boss.kind === "sharking" && boss.phase === "warn" && Math.floor(game.elapsed * 10) % 2 === 0) {
+        graphics.fillStyle(0xde5a48, 0.28).fillRect(0, boss.laneY - config.sharking.height / 2, 820, config.sharking.height);
+        graphics.lineStyle(2, 0xde5a48, 0.9).strokeRect(0, boss.laneY - config.sharking.height / 2, 820, config.sharking.height);
       }
       const image = this.bossImages[boss.kind];
       image.setVisible(true).setPosition(boss.x, boss.y);
@@ -247,15 +246,15 @@ export function createScene(state, afterUpdate, setPointer, loadFailure) {
       }
     }
 
-    // Inimigos da fase: sprites reaproveitados, balancando de leve enquanto voam.
-    drawEnemies(game) {
-      while (this.enemyImages.length < game.enemies.length) this.enemyImages.push(this.add.image(0, 0, enemyKinds[0]).setDepth(1));
-      this.enemyImages.forEach((image, index) => {
-        const enemy = game.enemies[index];
-        image.setVisible(!!enemy);
-        if (!enemy) return;
-        if (image.texture.key !== enemy.kind) image.setTexture(enemy.kind);
-        image.setPosition(enemy.x, enemy.y + 4 * Math.sin(game.elapsed * 6 + enemy.x / 50));
+    // Lacaios da fase: sprites reaproveitados, balancando de leve enquanto voam.
+    drawMinions(game) {
+      while (this.minionImages.length < game.minions.length) this.minionImages.push(this.add.image(0, 0, minionKinds[0]).setDepth(1));
+      this.minionImages.forEach((image, index) => {
+        const minion = game.minions[index];
+        image.setVisible(!!minion);
+        if (!minion) return;
+        if (image.texture.key !== minion.kind) image.setTexture(minion.kind);
+        image.setPosition(minion.x, minion.y + 4 * Math.sin(game.elapsed * 6 + minion.x / 50));
       });
     }
 
@@ -298,9 +297,9 @@ export function createScene(state, afterUpdate, setPointer, loadFailure) {
         graphics.lineStyle(2, 0x2d86a8).strokeCircle(shot.x, shot.y, shot.radius);
         graphics.fillStyle(0xffffff).fillCircle(shot.x - 4, shot.y - 4, 3);
       }
-      // Tacos giram; bombas apontam para onde estao caindo.
+      // Porretes giram; bombas apontam para onde estao caindo.
       const sprites = game.projectiles.filter((shot) => shot.kind !== "bubble");
-      while (this.shotImages.length < sprites.length) this.shotImages.push(this.add.image(0, 0, "bat").setDepth(1));
+      while (this.shotImages.length < sprites.length) this.shotImages.push(this.add.image(0, 0, "club").setDepth(1));
       this.shotImages.forEach((image, index) => {
         const shot = sprites[index];
         image.setVisible(!!shot);
@@ -309,7 +308,7 @@ export function createScene(state, afterUpdate, setPointer, loadFailure) {
         const angle = shot.kind === "bomb" ? Phaser.Math.RadToDeg(Math.atan2(shot.velocityY, shot.velocityX)) + 180 : game.elapsed * 270;
         image.setPosition(shot.x, shot.y).setAngle(angle);
       });
-      this.drawEnemies(game);
+      this.drawMinions(game);
       this.drawPowers(game, graphics);
       const blinking = game.invulnerable > 0 && Math.floor(game.elapsed * 12) % 2 === 0;
       this.hero.setY(game.birdY).setAlpha(blinking ? 0.35 : 1).setAngle(game.tracked && !game.paused && !game.finished ? 4 * Math.sin(game.elapsed * 8) : 0);
@@ -323,7 +322,7 @@ export function createScene(state, afterUpdate, setPointer, loadFailure) {
       this.drawHud(game);
       this.score.setText(String(game.score).padStart(2, "0"));
       this.best.setText(String(game.best).padStart(2, "0"));
-      this.bossTitle.setVisible(!!game.boss).setText(game.currentStage.bossName);
+      this.bossTitle.setVisible(!!game.boss).setText(t(`boss.${game.currentStage.boss}`));
       this.health.clear();
       if (game.boss) {
         const step = 210 / game.boss.maxHealth;
